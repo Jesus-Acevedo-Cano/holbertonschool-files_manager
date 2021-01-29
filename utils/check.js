@@ -1,6 +1,6 @@
 class ErrorMessage {
   static missing(res, nameMissArg) {
-    return res.status(400).send({error: `Missing ${nameMissArg}`});
+    return res.status(400).send({ error: `Missing ${nameMissArg}` });
   }
 
   static emailExist(res) {
@@ -8,15 +8,15 @@ class ErrorMessage {
   }
 
   static unauthorized(res) {
-    return res.status(401).send({error: 'Unauthorized'});
+    return res.status(401).send({ error: 'Unauthorized' });
   }
 
   static errorParentId(res, message) {
-    return res.status(400).send({error: message});
+    return res.status(400).send({ error: message });
   }
 
   static notFound(res) {
-    return res.status(404).send({error: 'Not found'});
+    return res.status(404).send({ error: 'Not found' });
   }
 }
 

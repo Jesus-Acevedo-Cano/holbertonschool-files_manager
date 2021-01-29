@@ -28,7 +28,7 @@ class UsersController {
     const authToken = await redis.get(`auth_${xToken}`);
     if (!authToken) return check.unauthorized(res);
 
-    const user = await db.getUser({ _id: MongoClient(redisToken) });
+    const user = await db.getUser({ _id: MongoClient(authToken) });
     if (!user) return check.unauthorized(res);
 
     delete user.password;
