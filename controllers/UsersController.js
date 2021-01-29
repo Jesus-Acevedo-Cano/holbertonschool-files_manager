@@ -3,7 +3,7 @@ import db from '../utils/db';
 import check from '../utils/check';
 import redis from '../utils/redis';
 
-const { MongoClient } = require('mongodb');
+const { ObjectId } = require('mongodb');
 
 class UsersController {
   static async postNew(req, res) {
@@ -28,7 +28,7 @@ class UsersController {
     const authToken = await redis.get(`auth_${xToken}`);
     if (!authToken) return check.unauthorized(res);
 
-    const user = await db.getUser({ _id: MongoClient(authToken) });
+    const user = await db.getUser({ _id: ObjectId(authToken) });
     if (!user) return check.unauthorized(res);
 
     delete user.password;
