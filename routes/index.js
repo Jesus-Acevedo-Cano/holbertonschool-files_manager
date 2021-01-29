@@ -9,6 +9,7 @@ const router = (app) => {
 
   paths.get('/status', ((req, res) => AppController.getStatus(req, res)));
   paths.get('/stats', ((req, res) => AppController.getStats(req, res)));
+  paths.post('/users', ((req, res) => UsersController.postNew(req, res)));
 };
 
 export default router;
