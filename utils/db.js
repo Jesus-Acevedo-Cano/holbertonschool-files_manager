@@ -33,6 +33,14 @@ class DBClient {
   async getUser(user) {
     return this.db.collection('users').findOne(user);
   }
+
+  async createFile(files) {
+    return this.db.collection('files').insertOne(files);
+  }
+
+  async getFile(files) {
+    return this.db.collection('files').findOne(files);
+  }
 }
 
 const dbClient = new DBClient();
