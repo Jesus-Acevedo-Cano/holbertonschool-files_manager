@@ -7,18 +7,17 @@ const { ObjectId } = require('mongodb');
 
 class UsersController {
   static async postNew(req, res) {
-    // Data
     const userEmail = req.body.email;
     if (!userEmail) return check.missing(res, 'email');
 
-    const userPassword = req.body.password ? sha1(req.body.password) : null;
-    const emailExist = await db.getUser({ email: userEmail });
-
-    // check errors
+    const userPassword = req.body.password;
     if (!userPassword) return check.missing(res, 'password');
+
+    const emailExist = await db.getUser({ email: userEmail });
     if (emailExist) return check.emailExist(res);
 
-    const user = await db.createUser({ email: userEmail, password: userPassword });
+    const passwordHashed = sha1(userPassword);
+    const user = await db.createUser({ email: userEmail, password: passwordHashed });
 
     return res.status(201).send({ id: user.insertedId, email: userEmail });
   }
