@@ -9,10 +9,12 @@ class UsersController {
   static async postNew(req, res) {
     // Data
     const userEmail = req.body.email;
+    if (!userEmail) return check.missing(res, 'email');
+
     const userPassword = req.body.password ? sha1(req.body.password) : null;
     const emailExist = await db.getUser({ email: userEmail });
+
     // check errors
-    if (!userEmail) return check.missing(res, 'email');
     if (!userPassword) return check.missing(res, 'password');
     if (emailExist) return check.emailExist(res);
 
