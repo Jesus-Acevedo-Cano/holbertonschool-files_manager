@@ -36,7 +36,7 @@ class AuthController {
     const authToken = await redis.get(`auth_${xToken}`);
     if (!authToken) return check.unauthorized(res);
 
-    await redis.del(`auth_${authToken}`);
+    await redis.del(`auth_${xToken}`);
     return res.status(204).send();
   }
 }
