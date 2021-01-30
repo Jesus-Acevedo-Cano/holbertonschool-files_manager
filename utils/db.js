@@ -41,6 +41,10 @@ class DBClient {
   async getFile(files) {
     return this.db.collection('files').findOne(files);
   }
+
+  async aggregateFiles(aggregateData) {
+    return this.db.collection('files').aggregate(aggregateData);
+  }
 }
 
 const dbClient = new DBClient();
