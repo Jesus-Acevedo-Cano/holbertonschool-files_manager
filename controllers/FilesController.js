@@ -58,7 +58,7 @@ class FilesController {
 
     const buff = Buffer.from(data, 'base64');
     const path = `${folderPath}/${pathUuid}`;
-    await fs.mkdir(path, { recursive: true }, (err) => {
+    await fs.mkdir(folderPath, { recursive: true }, (err) => {
       if (!err) return true;
       return res.status(400).send({ error: err.message });
     });
