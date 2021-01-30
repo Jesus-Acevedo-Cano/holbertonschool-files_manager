@@ -45,6 +45,10 @@ class DBClient {
   async aggregateFiles(aggregateData) {
     return this.db.collection('files').aggregate(aggregateData);
   }
+
+  async updateFile(idFile, isPublic) {
+    return this.db.collection('files').updateOne(idFile, isPublic);
+  }
 }
 
 const dbClient = new DBClient();

@@ -5,9 +5,13 @@ import ErrorMessage from '../utils/errorMessage';
 
 const { ObjectId } = require('mongodb');
 const fs = require('fs');
+const mime = require('mime-types');
+const Bull = require('bull');
 
 class FilesController {
   static async postUpload(req, res) {
+    const fileQueue = new Bull('fileQueue');
+
     const xToken = req.header('X-Token') || null;
     if (!xToken) return ErrorMessage.unauthorized(res);
 
@@ -73,6 +77,12 @@ class FilesController {
 
     file.localPath = path;
     await dbClient.createFile(file);
+
+    fileQueue.add({
+      userId: file.userId,
+      fileId: file._id,
+    });
+
     return res.status(201).send({
       id: file._id,
       userId: file.userId,
@@ -145,6 +155,98 @@ class FilesController {
     });
 
     return res.send(files);
+  }
+
+  static async putPublish(req, res) {
+    const xToken = req.header('X-Token') || null;
+    if (!xToken) return ErrorMessage.unauthorized(res);
+
+    const authToken = await redisClient.get(`auth_${xToken}`);
+    if (!authToken) return ErrorMessage.unauthorized(res);
+
+    const user = await dbClient.getUser({ _id: ObjectId(authToken) });
+    if (!user) return ErrorMessage.unauthorized(res);
+
+    const fileId = req.params.id || '';
+
+    let file = await dbClient.getFile({ _id: ObjectId(fileId), userId: user._id });
+    if (!file) return ErrorMessage.notFound(res);
+
+    await dbClient.updateFile({ _id: ObjectId(fileId) }, { $set: { isPublic: true } });
+    file = await dbClient.getFile({ _id: ObjectId(fileId), userId: user._id });
+
+    return res.status(200).send({
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    });
+  }
+
+  static async putUnpublish(req, res) {
+    const xToken = req.header('X-Token') || null;
+    if (!xToken) return ErrorMessage.unauthorized(res);
+
+    const authToken = await redisClient.get(`auth_${xToken}`);
+    if (!authToken) return ErrorMessage.unauthorized(res);
+
+    const user = await dbClient.users.findOne({ _id: ObjectId(authToken) });
+    if (!user) return ErrorMessage.unauthorized(res);
+
+    const fileId = req.params.id || '';
+
+    let file = await dbClient.getFile({ _id: ObjectId(fileId), userId: user._id });
+    if (!file) return ErrorMessage.notFound(res);
+
+    await dbClient.updateFile({ _id: ObjectId(fileId) }, { $set: { isPublic: false } });
+    file = await dbClient.getFile({ _id: ObjectId(fileId), userId: user._id });
+
+    return res.status(200).send({
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    });
+  }
+
+  static async getFile(req, res) {
+    const fileId = req.params.id || '';
+    const size = req.query.size || 0;
+
+    const file = await dbClient.getFile({ _id: ObjectId(fileId) });
+    if (!file) return ErrorMessage.notFound(res);
+
+    const { isPublic, userId, type } = file;
+
+    let user = null;
+    let owner = false;
+
+    const xToken = req.header('X-Token') || null;
+    if (xToken) {
+      const authToken = await redisClient.get(`auth_${xToken}`);
+      if (!authToken) {
+        user = await dbClient.users.findOne({ _id: ObjectId(authToken) });
+        if (user) owner = user._id.toString() === userId.toString();
+      }
+    }
+
+    if (!isPublic && !owner) return ErrorMessage.notFound(res);
+    if (type === 'folder') return res.status(400).send({ error: 'A folder doesn\'t have content' });
+
+    const path = size === 0 ? file.localPath : `${file.localPath}_${size}`;
+
+    try {
+      const fileData = fs.readFileSync(path);
+      const mimeType = mime.contentType(file.name);
+      res.setHeader('Content-Type', mimeType);
+      return res.status(200).send(fileData);
+    } catch (err) {
+      return ErrorMessage.notFound(res);
+    }
   }
 }
 
