@@ -19,6 +19,9 @@ const router = (app) => {
   paths.post('/files', ((req, res) => FilesController.postUpload(req, res)));
   paths.get('/files/:id', ((req, res) => FilesController.getShow(req, res)));
   paths.get('/files', ((req, res) => FilesController.getIndex(req, res)));
+  paths.put('/files/:id/publish', ((req, res) => FilesController.putPublish(req, res)));
+  paths.put('/files/:id/unpublish', ((req, res) => FilesController.putUnpublish(req, res)));
+  paths.get('/files/:id/data', ((req, res) => FilesController.getFile(req, res)));
 };
 
 export default router;
