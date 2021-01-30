@@ -34,6 +34,7 @@ class FilesController {
       if (!parentFile) return check.errorParentId(res, 'Parent not found');
       if (!['folder'].includes(parentFile.type)) return check.errorParentId(res, 'Parent is not a folder');
     }
+
     const file = {
       userId: user._id,
       name,
@@ -41,9 +42,10 @@ class FilesController {
       isPublic,
       parentId,
     };
+
     if (['folder'].includes(type)) {
       await db.createFile(file);
-      return res.status(200).send({
+      return res.status(201).send({
         id: file._id,
         userId: file.userId,
         name: file.name,
@@ -58,6 +60,7 @@ class FilesController {
 
     const buff = Buffer.from(data, 'base64');
     const path = `${folderPath}/${pathUuid}`;
+
     await fs.mkdir(folderPath, { recursive: true }, (err) => {
       if (!err) return true;
       return res.status(400).send({ error: err.message });
