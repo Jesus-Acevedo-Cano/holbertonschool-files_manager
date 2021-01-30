@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import db from '../utils/db';
-// import redis from '../utils/redis';
+import redis from '../utils/redis';
 import check from '../utils/check';
 
 const { ObjectId } = require('mongodb');
@@ -9,7 +9,7 @@ const fs = require('fs');
 class FilesController {
   static async postUpload(req, res) {
     const xToken = req.header('X-Token');
-    const user = await db.getUser({ token: xToken });
+    const user = await redis.get({ token: xToken });
     if (!user) return check.unauthorized(res);
 
     const { name } = req.body;
