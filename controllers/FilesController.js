@@ -132,7 +132,7 @@ class FilesController {
 
     if (parentId !== 0) {
       if (!ObjectId(parentId)) return ErrorMessage.unauthorized(res);
-
+      parentId = ObjectId(parentId);
       const folder = await dbClient.getFile({ _id: ObjectId(parentId) });
       if (!folder || folder.type !== 'folder') return res.status(200).send([]);
     }
