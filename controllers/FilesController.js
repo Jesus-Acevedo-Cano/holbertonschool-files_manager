@@ -9,7 +9,10 @@ const fs = require('fs');
 class FilesController {
   static async postUpload(req, res) {
     const xToken = req.header('X-Token');
-    const user = await redis.get({ token: xToken });
+    const authToken = await redis.get({ token: xToken });
+    if (!authToken) return check.unauthorized(res);
+
+    const user = await db.getUser({ _id: ObjectId(authToken) });
     if (!user) return check.unauthorized(res);
 
     const { name } = req.body;
