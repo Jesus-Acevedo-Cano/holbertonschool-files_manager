@@ -195,7 +195,7 @@ class FilesController {
     const { isPublic, userId, type } = file;
 
     let owner = false;
-    const user = Auth.authorized(req);
+    const user = await Auth.authorized(req);
     if (user) owner = user._id.toString() === userId.toString();
 
     if (!isPublic && !owner) return ErrorMessage.notFound(res);
