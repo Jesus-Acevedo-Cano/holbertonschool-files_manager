@@ -1,12 +1,14 @@
 import sha1 from 'sha1';
+import Auth from '../utils/auth';
 import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
 import ErrorMessage from '../utils/errorMessage';
 
-const { ObjectId } = require('mongodb');
+const Bull = require('bull');
 
 class UsersController {
   static async postNew(req, res) {
+    const userQueue = new Bull('userQueue');
+
     const userEmail = req.body.email;
     if (!userEmail) return ErrorMessage.missing(res, 'email');
 
@@ -19,17 +21,15 @@ class UsersController {
     const passwordHashed = sha1(userPassword);
     const user = await dbClient.createUser({ email: userEmail, password: passwordHashed });
 
+    userQueue.add({
+      userId: user.insertedId,
+    });
+
     return res.status(201).send({ id: user.insertedId, email: userEmail });
   }
 
   static async getMe(req, res) {
-    const xToken = req.header('X-Token') || null;
-    if (!xToken) return ErrorMessage.unauthorized(res);
-
-    const authToken = await redisClient.get(`auth_${xToken}`);
-    if (!authToken) return ErrorMessage.unauthorized(res);
-
-    const user = await dbClient.getUser({ _id: ObjectId(authToken) });
+    const user = await Auth.authorized(req);
     if (!user) return ErrorMessage.unauthorized(res);
 
     delete user.password;

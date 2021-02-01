@@ -1,24 +1,19 @@
 import { v4 as uuidv4 } from 'uuid';
+import Auth from '../utils/auth';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 import ErrorMessage from '../utils/errorMessage';
 
-const { ObjectId } = require('mongodb');
 const fs = require('fs');
-const mime = require('mime-types');
 const Bull = require('bull');
+const mime = require('mime-types');
+const { ObjectId } = require('mongodb');
 
 class FilesController {
   static async postUpload(req, res) {
     const fileQueue = new Bull('fileQueue');
 
-    const xToken = req.header('X-Token') || null;
-    if (!xToken) return ErrorMessage.unauthorized(res);
-
-    const authToken = await redisClient.get(`auth_${xToken}`);
-    if (!authToken) return ErrorMessage.unauthorized(res);
-
-    const user = await dbClient.getUser({ _id: ObjectId(authToken) });
+    const user = await Auth.authorized(req);
     if (!user) return ErrorMessage.unauthorized(res);
 
     const { name } = req.body;
@@ -94,13 +89,7 @@ class FilesController {
   }
 
   static async getShow(req, res) {
-    const xToken = req.header('X-Token') || null;
-    if (!xToken) return ErrorMessage.unauthorized(res);
-
-    const authToken = await redisClient.get(`auth_${xToken}`);
-    if (!authToken) return ErrorMessage.unauthorized(res);
-
-    const user = await dbClient.getUser({ _id: ObjectId(authToken) });
+    const user = await Auth.authorized(req);
     if (!user) return ErrorMessage.unauthorized(res);
 
     const fileId = req.params.id;
@@ -118,13 +107,7 @@ class FilesController {
   }
 
   static async getIndex(req, res) {
-    const xToken = req.header('X-Token') || null;
-    if (!xToken) return ErrorMessage.unauthorized(res);
-
-    const authToken = await redisClient.get(`auth_${xToken}`);
-    if (!authToken) return ErrorMessage.unauthorized(res);
-
-    const user = await dbClient.getUser({ _id: ObjectId(authToken) });
+    const user = await Auth.authorized(req);
     if (!user) return ErrorMessage.unauthorized(res);
 
     let parentId = req.query.parentId || 0;
@@ -160,13 +143,7 @@ class FilesController {
   }
 
   static async putPublish(req, res) {
-    const xToken = req.header('X-Token') || null;
-    if (!xToken) return ErrorMessage.unauthorized(res);
-
-    const authToken = await redisClient.get(`auth_${xToken}`);
-    if (!authToken) return ErrorMessage.unauthorized(res);
-
-    const user = await dbClient.getUser({ _id: ObjectId(authToken) });
+    const user = await Auth.authorized(req);
     if (!user) return ErrorMessage.unauthorized(res);
 
     const fileId = req.params.id || '';
@@ -188,13 +165,7 @@ class FilesController {
   }
 
   static async putUnpublish(req, res) {
-    const xToken = req.header('X-Token') || null;
-    if (!xToken) return ErrorMessage.unauthorized(res);
-
-    const authToken = await redisClient.get(`auth_${xToken}`);
-    if (!authToken) return ErrorMessage.unauthorized(res);
-
-    const user = await dbClient.users.findOne({ _id: ObjectId(authToken) });
+    const user = await Auth.authorized(req);
     if (!user) return ErrorMessage.unauthorized(res);
 
     const fileId = req.params.id || '';

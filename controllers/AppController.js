@@ -1,14 +1,14 @@
-import db from '../utils/db';
-import redis from '../utils/redis';
+import dbClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 class AppController {
   static getStatus(req, res) {
-    const dict = { redis: redis.isAlive(), db: db.isAlive() };
+    const dict = { redis: redisClient.isAlive(), db: dbClient.isAlive() };
     return res.status(200).send(dict);
   }
 
   static async getStats(req, res) {
-    const dict = { users: await db.nbUsers(), files: await db.nbFiles() };
+    const dict = { users: await dbClient.nbUsers(), files: await dbClient.nbFiles() };
     return res.status(200).send(dict);
   }
 }
