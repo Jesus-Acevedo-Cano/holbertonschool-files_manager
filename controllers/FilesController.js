@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import Auth from '../utils/auth';
 import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
 import ErrorMessage from '../utils/errorMessage';
 
 const fs = require('fs');
@@ -195,20 +194,12 @@ class FilesController {
 
     const { isPublic, userId, type } = file;
 
-    let user = null;
     let owner = false;
-
-    const xToken = req.header('X-Token') || null;
-    if (xToken) {
-      const authToken = await redisClient.get(`auth_${xToken}`);
-      if (!authToken) {
-        user = await dbClient.users.findOne({ _id: ObjectId(authToken) });
-        if (user) owner = user._id.toString() === userId.toString();
-      }
-    }
+    const user = Auth.authorized(req);
+    if (user) owner = user._id.toString() === userId.toString();
 
     if (!isPublic && !owner) return ErrorMessage.notFound(res);
-    if (type === 'folder') return res.status(400).send({ error: 'A folder doesn\'t have content' });
+    if (type === 'folder') return ErrorMessage.notContent(res);
 
     const path = size === 0 ? file.localPath : `${file.localPath}_${size}`;
 

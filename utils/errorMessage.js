@@ -18,6 +18,10 @@ class ErrorMessage {
   static notFound(res) {
     return res.status(404).send({ error: 'Not found' });
   }
+
+  static notContent(res) {
+    return res.status(400).send({ error: 'A folder doesn\'t have content' });
+  }
 }
 
 export default ErrorMessage;
